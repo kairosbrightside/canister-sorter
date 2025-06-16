@@ -5,10 +5,10 @@ import gspread
 from gspread_dataframe import get_as_dataframe
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
+from google.oauth2.service_account import Credentials
 
-### gspread function that uses service account credentials
-### make sure you've added credentials.json to your .streamlit/secrets.toml or deploy config
-### and shared the Google Sheet with the service account's email
+
+
 def authorize_gspread():
     creds_dict = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(creds_dict)
