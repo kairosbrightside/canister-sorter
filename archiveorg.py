@@ -67,25 +67,34 @@ def load_data():
     def load_sheet_df(sheet_name, worksheet_title="Sheet1"):
         client = authorize_gspread()
         worksheet = client.open(sheet_name).worksheet(worksheet_title)
-        df = get_as_dataframe(worksheet, dtype=str)  
-        df = df.dropna(how="all")  
+        df = get_as_dataframe(worksheet, dtype=str)
+        df = df.dropna(how="all")
         return df
 
+    # Load the full dataset
     df = load_sheet_df("Canister Notes", worksheet_title="Form Responses 1")
+    return df
 
-    shelved_df = df[df["Storage Location"].str.contains(":", na=False)].copy()
+df = load_data()
 
-    def parse_location(loc):
-        match = re.match(r"SRTC\\s+([^:]+):([A-Ja-j])([1-9])", loc)
-        if match:
-            room, row, col = match.groups()
-            return room.upper(), row.upper(), int(col)
-        return None, None, None
+consolidated_df = consolidate_canister_entries(df)
 
-    shelved_df[["Room", "Row", "Col"]] = shelved_df["Storage Location"].apply(
-        lambda x: pd.Series(parse_location(x))
-    )
-    return df, shelved_df
+shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
+
+# Room / Row / Col for matrix placement
+def parse_location(loc):
+    match = re.match(r"SRTC\s+([^:]+):([A-Ja-j])([1-9])", loc)
+    if match:
+        room, row, col = match.groups()
+        return room.upper(), row.upper(), int(col)
+    return None, None, None
+
+shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
+    lambda x: pd.Series(parse_location(x))
+)
+
+# `shelved_df` is now the filtered, parsed, consolidated shelf data
+shelved_df = shelved_df_raw
 
 def create_shelf_matrix(rows, cols, data):
     matrix = pd.DataFrame("", index=rows, columns=cols)
