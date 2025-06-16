@@ -75,12 +75,6 @@ def load_data():
     df = load_sheet_df("Canister Notes", worksheet_title="Form Responses 1")
     return df
 
-df = load_data()
-
-consolidated_df = consolidate_canister_entries(df)
-
-shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
-
 # Room / Row / Col for matrix placement
 def parse_location(loc):
     match = re.match(r"SRTC\s+([^:]+):([A-Ja-j])([1-9])", loc)
@@ -104,9 +98,16 @@ def create_shelf_matrix(rows, cols, data):
             matrix.at[r, c] = str(row["Canister ID"])
     return matrix
 
-df, shelved_df = load_data()
+df = load_data()
+
 consolidated_df = consolidate_canister_entries(df)
-shelved_df = consolidate_canister_entries(shelved_df)
+
+shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
+
+shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
+    lambda x: pd.Series(parse_location(x))
+)
+shelved_df = shelved_df_raw
 
 st.title("Canister Shelf Map")
 
