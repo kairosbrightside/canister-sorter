@@ -83,13 +83,6 @@ def parse_location(loc):
         return room.upper(), row.upper(), int(col)
     return None, None, None
 
-shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
-    lambda x: pd.Series(parse_location(x))
-)
-
-# `shelved_df` is now the filtered, parsed, consolidated shelf data
-shelved_df = shelved_df_raw
-
 def create_shelf_matrix(rows, cols, data):
     matrix = pd.DataFrame("", index=rows, columns=cols)
     for _, row in data.iterrows():
@@ -99,7 +92,6 @@ def create_shelf_matrix(rows, cols, data):
     return matrix
 
 df = load_data()
-
 consolidated_df = consolidate_canister_entries(df)
 
 shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
@@ -107,6 +99,7 @@ shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contain
 shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
     lambda x: pd.Series(parse_location(x))
 )
+
 shelved_df = shelved_df_raw
 
 st.title("Canister Shelf Map")
