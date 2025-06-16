@@ -9,13 +9,9 @@ from datetime import datetime
 ### gspread function that uses service account credentials
 ### make sure you've added credentials.json to your .streamlit/secrets.toml or deploy config
 ### and shared the Google Sheet with the service account's email
-
 def authorize_gspread():
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("serviceaccount.json", scope)
+    creds_dict = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(creds_dict)
     client = gspread.authorize(creds)
     return client
 
