@@ -138,6 +138,9 @@ if search_query:
     def match_row(row):
         can_id = str(row.get("Canister ID", "")).lower()
         location = str(row.get("Storage Location", "")).lower()
+        size = str(row.get("Container Size (L)", "")).lower()
+        sizetwo = str(row.get("Notes", "")).lower()
+        type = str(row.get("Type of Entry", "")).lower()
         sample_date = row.get("Sample Date", "")
         year = ""
         if pd.notna(sample_date):
