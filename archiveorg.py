@@ -139,7 +139,7 @@ if search_query:
         can_id = str(row.get("Canister ID", "")).lower()
         location = str(row.get("Storage Location", "")).lower()
         size = str(row.get("Container Size (L)", "")).lower()
-        sizetwo = str(row.get("Notes", "")).lower()
+        notes = str(row.get("Notes", "")).lower()
         type = str(row.get("Type of Entry", "")).lower()
         sample_date = row.get("Sample Date", "")
         year = ""
@@ -148,7 +148,7 @@ if search_query:
                 year = pd.to_datetime(sample_date).year
             except Exception:
                 pass
-        return (query in can_id) or (query in location) or (query == str(year))
+        return (query in can_id) or (query in location) or (query == str(year)) or (query in size) or (query in notes) or (query in type)
 
     result = df_all[df_all.apply(match_row, axis=1)]
 
