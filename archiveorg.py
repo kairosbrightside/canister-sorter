@@ -18,35 +18,43 @@ def authorize_gspread():
     return client
 
 def consolidate_canister_entries(df):
-    df = df.sort_values("Timestamp") 
     df = df.copy()
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors="coerce")
+    df = df.sort_values("Timestamp")
 
-    samples = df[df["Type of Entry"].str.lower() != "update existing"]
-    updates = df[df["Type of Entry"].str.lower() == "update existing"]
+    # Split into updates and non-updates
+    is_update = df["Type of Entry"].str.lower() == "update existing"
+    updates = df[is_update]
+    non_updates = df[~is_update]
 
-    recent_samples = (
-        samples.sort_values("Timestamp")
-        .groupby("Canister ID")
-        .last()
-        .reset_index()
-    )
+    final_rows = []
 
-    recent_updates = (
-        updates.sort_values("Timestamp")
-        .groupby("Canister ID")
-        .last()
-        .reset_index()
-    )
+    for can_id, group in df.groupby("Canister ID"):
+        group = group.sort_values("Timestamp")
 
-    combined = pd.merge(
-        recent_samples,
-        recent_updates,
-        on="Canister ID",
-        how="outer",
-        suffixes=("_sample", "_update"),
-    )
+        # Get the last non-update entry
+        recent_non_update = group[group["Type of Entry"].str.lower() != "update existing"]
+        if recent_non_update.empty:
+            continue  # skip if no valid base entry
 
+        base_row = recent_non_update.iloc[-1]
+        base_time = base_row["Timestamp"]
+
+        # All updates *after* the base time
+        post_updates = group[
+            (group["Type of Entry"].str.lower() == "update existing") &
+            (group["Timestamp"] > base_time)
+        ]
+        # Merge all updates onto base row
+        merged = base_row.to_dict()
+        for _, update_row in post_updates.iterrows():
+            for col, val in update_row.items():
+                if pd.notna(val) and str(val).strip():
+                    merged[col] = val
+
+        final_rows.append(merged)
+    return pd.DataFrame(final_rows)
+    
     def merge_fields(row, col):
         update_val = row.get(f"{col}_update")
         sample_val = row.get(f"{col}_sample")
