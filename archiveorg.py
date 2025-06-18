@@ -100,6 +100,7 @@ def create_shelf_matrix(rows, cols, data):
     return matrix
 
 df = load_data()
+
 consolidated_df = consolidate_canister_entries(df)
 
 shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
@@ -140,6 +141,14 @@ search_query = st.sidebar.text_input("Search (Canister ID, Location, or Year)", 
 
 df_all = consolidated_df.copy()
 
+PREFERRED_COLUMN_ORDER = [
+    "Canister ID", "Pressure", "Sample Date", "Timezone", "Location",
+    "Latitude", "Longitude", "Storage Location", "Type of Entry",
+    "Ambient Temperature (°C)", "Wind Speed (mph)", "Wind Direction",
+    "Container Size", "Container Type", "New Sample or Measured",
+    # Additional fields you might have go here
+    "Notes"
+]
 if search_query:
     query = search_query.strip().lower()
 
@@ -160,12 +169,14 @@ if search_query:
 
     result = df_all[df_all.apply(match_row, axis=1)]
 
+
     if not result.empty:
         st.sidebar.success(f"Found {len(result)} match{'es' if len(result) > 1 else ''}")
         for i, row in result.iterrows():
             with st.sidebar.expander(f"Edit Canister {row['Canister ID']}"):
                 updated_row = {}
-                for col in result.columns:
+                
+                for col in sorted(result.columns, key=lambda x: PREFERRED_COLUMN_ORDER.index(x) if x in PREFERRED_COLUMN_ORDER else len(PREFERRED_COLUMN_ORDER)):
                     val = row[col] if pd.notna(row[col]) else ""
                     updated_val = st.text_input(f"{col}", value=str(val), key=f"{col}_{i}")
                     updated_row[col] = updated_val
