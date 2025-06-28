@@ -176,14 +176,8 @@ if search_query:
             with st.sidebar.expander(f"Edit Canister {row['Canister ID']}"):
                 updated_row = {}
     
-                # Include extra columns not in DISPLAY_ORDER (but keep DISPLAY_ORDER first)
-                all_cols = result.copy()
-                for col in row.index:
-                    if col not in all_cols:
-                        all_cols.append(col)
-    
                 # Input fields in order
-                for col in all_cols:
+                for col in result:
                     val = row[col] if col in row and pd.notna(row[col]) else ""
                     updated_val = st.text_input(f"{col}", value=str(val), key=f"{col}_{i}")
                     updated_row[col] = updated_val
