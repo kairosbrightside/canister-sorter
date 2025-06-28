@@ -155,7 +155,11 @@ if not result.empty:
             updated_row = {}
 
             # Include extra columns not in DISPLAY_ORDER (but keep DISPLAY_ORDER first)
-            all_cols = DISPLAY_ORDER.copy()
+            # actually removing that bc i don't like it 
+            # maybe will try to implement later...
+            
+            #all_cols = DISPLAY_ORDER.copy()
+            all_cols = df_all
             for col in row.index:
                 if col not in all_cols:
                     all_cols.append(col)
