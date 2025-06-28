@@ -103,6 +103,15 @@ df = load_data()
 
 consolidated_df = consolidate_canister_entries(df)
 
+shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
+
+shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
+    lambda x: pd.Series(parse_location(x))
+)
+
+shelved_df = shelved_df_raw
+
+# 🔹 Add this block here
 if st.button("Average pressure of Archive samples"):
     archive_samples = df[df["Sample Type"].str.lower() == "archive"].copy()
 
@@ -128,13 +137,8 @@ if st.button("Average pressure of Archive samples"):
     else:
         st.warning("No valid pressures found in recent 'Update Existing' entries for Archive samples.")
 
-shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
-
-shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
-    lambda x: pd.Series(parse_location(x))
-)
-
-shelved_df = shelved_df_raw
+# 🔹 Then continue with the rest of your app
+st.title("Canister Shelf Map")
 
 st.title("Canister Shelf Map")
 
