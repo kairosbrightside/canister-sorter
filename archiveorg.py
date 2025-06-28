@@ -128,8 +128,8 @@ if st.button("Average pressure of Archive samples"):
     )
 
     # Try converting pressure to numeric, if not already
-    latest_updates["Pressure"] = pd.to_numeric(latest_updates["Pressure"], errors="coerce")
-    valid_pressures = latest_updates["Pressure"].dropna()
+    latest_updates["Pressure (psig)"] = pd.to_numeric(latest_updates["Pressure (psig)"], errors="coerce")
+    valid_pressures = latest_updates["Pressure (psig)"].dropna()
 
     if not valid_pressures.empty:
         avg_pressure = valid_pressures.mean()
@@ -171,7 +171,7 @@ search_query = st.sidebar.text_input("Search (Canister ID, Location, or Year)", 
 df_all = consolidated_df.copy()
 
 PREFERRED_COLUMN_ORDER = [
-    "Canister ID", "Pressure", "Sample Date", "Timezone", "Location",
+    "Canister ID", "Pressure (psig)", "Sample Date", "Timezone", "Location",
     "Latitude", "Longitude", "Storage Location", "Type of Entry",
     "Ambient Temperature (°C)", "Wind Speed (mph)", "Wind Direction",
     "Container Size", "Container Type", "New Sample or Measured",
