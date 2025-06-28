@@ -120,6 +120,7 @@ DISPLAY_ORDER = [
 
 search_query = st.sidebar.text_input("Search (Canister ID, Location, or Year)", value="")
 
+df_all = consolidated_df.copy()
 if search_query:
     query = search_query.strip().lower()
 
