@@ -103,6 +103,31 @@ df = load_data()
 
 consolidated_df = consolidate_canister_entries(df)
 
+if st.button("Average pressure of Archive samples"):
+    archive_samples = df[df["Sample Type"].str.lower() == "archive"].copy()
+
+    # Only keep valid timestamps
+    archive_samples["Timestamp"] = pd.to_datetime(archive_samples["Timestamp"], errors="coerce")
+    archive_samples = archive_samples.dropna(subset=["Timestamp"])
+
+    # Most recent 'update existing' for each canister
+    latest_updates = (
+        archive_samples[archive_samples["Type of Entry"].str.lower() == "update existing"]
+        .sort_values("Timestamp")
+        .groupby("Canister ID")
+        .tail(1)
+    )
+
+    # Try converting pressure to numeric, if not already
+    latest_updates["Pressure"] = pd.to_numeric(latest_updates["Pressure"], errors="coerce")
+    valid_pressures = latest_updates["Pressure"].dropna()
+
+    if not valid_pressures.empty:
+        avg_pressure = valid_pressures.mean()
+        st.success(f"Average pressure of Archive samples (latest updates): {avg_pressure:.2f}")
+    else:
+        st.warning("No valid pressures found in recent 'Update Existing' entries for Archive samples.")
+
 shelved_df_raw = consolidated_df[consolidated_df["Storage Location"].str.contains(":", na=False)].copy()
 
 shelved_df_raw[["Room", "Row", "Col"]] = shelved_df_raw["Storage Location"].apply(
