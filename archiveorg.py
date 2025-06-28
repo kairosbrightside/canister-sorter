@@ -170,7 +170,7 @@ if search_query:
     result = df_all[df_all.apply(match_row, axis=1)]
 
 
-    iif not result.empty:
+    if not result.empty:
         st.sidebar.success(f"Found {len(result)} match{'es' if len(result) > 1 else ''}")
         for i, row in result.iterrows():
             with st.sidebar.expander(f"Edit Canister {row['Canister ID']}"):
