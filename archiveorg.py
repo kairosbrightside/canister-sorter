@@ -148,13 +148,38 @@ if search_query:
 
     result = df_all[df_all.apply(match_row, axis=1)]
 
-    if not result.empty:
-        st.sidebar.success(f"Found {len(result)} match{'es' if len(result) > 1 else ''}")
-        for i, row in result.iterrows():
-            with st.sidebar.expander(f"Edit Canister {row['Canister ID']}"):
-                updated_row = {}
-                for col in DISPLAY_ORDER:
-                    if col in row:
-                        val = row[col] if pd.notna(row[col]) else ""
-                        updated_val = st.text_input(f"{col}", value=str(val), key=f"{col}_{i}")
-                        updated_row[col] = updated_val
+if not result.empty:
+    st.sidebar.success(f"Found {len(result)} match{'es' if len(result) > 1 else ''}")
+    for i, row in result.iterrows():
+        with st.sidebar.expander(f"Edit Canister {row['Canister ID']}"):
+            updated_row = {}
+
+            # Include extra columns not in DISPLAY_ORDER (but keep DISPLAY_ORDER first)
+            all_cols = DISPLAY_ORDER.copy()
+            for col in row.index:
+                if col not in all_cols:
+                    all_cols.append(col)
+
+            # Input fields in order
+            for col in all_cols:
+                val = row[col] if col in row and pd.notna(row[col]) else ""
+                updated_val = st.text_input(f"{col}", value=str(val), key=f"{col}_{i}")
+                updated_row[col] = updated_val
+
+            # Update button
+            if st.button(f"Update {row['Canister ID']}", key=f"save_{i}"):
+                try:
+                    updated_row["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    updated_row["Type of Entry"] = f"{row['Type of Entry']}"  # Preserve entry type
+
+                    client = authorize_gspread()
+                    sheet = client.open("Canister Notes").worksheet("Form Responses 1")
+                    form_columns = sheet.row_values(1)
+
+                    full_row = [updated_row.get(col, "") for col in form_columns]
+                    sheet.append_row(full_row)
+
+                    st.success(f"Appended update for Canister {updated_row['Canister ID']}")
+                except Exception as e:
+                    st.error(f"Failed to append update: {e}")
+
