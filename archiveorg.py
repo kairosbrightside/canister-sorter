@@ -59,25 +59,25 @@ def load_data():
 
     shelved_df = df[df["Storage Location"].str.contains(":", na=False)].copy()
 
-    def parse_location(loc):
-        match = re.match(r"SRTC\\s+([^:]+):([A-Ja-j])([1-9])", loc)
-        if match:
-            room, row, col = match.groups()
-            return room.upper(), row.upper(), int(col)
-        return None, None, None
+# Room / Row / Col for matrix placement
 
-    shelved_df[["Room", "Row", "Col"]] = shelved_df["Storage Location"].apply(
-        lambda x: pd.Series(parse_location(x))
-    )
-    return df, shelved_df
+def parse_location(loc):
+    match = re.match(r"SRTC\s+([^:]+):([A-Ja-j])([1-9])", loc)
+    if match:
+        room, row, col = match.groups()
+        return room.upper(), row.upper(), int(col)
 
-# Create shelf matrix to display canister IDs
+    return None, None, None
+
+
+
 def create_shelf_matrix(rows, cols, data):
     matrix = pd.DataFrame("", index=rows, columns=cols)
     for _, row in data.iterrows():
         r, c = row["Row"], row["Col"]
         if r in rows and c in cols:
             matrix.at[r, c] = str(row["Canister ID"])
+
     return matrix
 
 # Load and consolidate data
