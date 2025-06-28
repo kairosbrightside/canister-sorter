@@ -126,6 +126,9 @@ if search_query:
     def match_row(row):
         can_id = str(row.get("Canister ID", "")).lower()
         location = str(row.get("Storage Location", "")).lower()
+        size = str(row.get("Container Size (L)", "")).lower()
+        notes = str(row.get("Notes", "")).lower()
+        entry_type = str(row.get("Type of Entry", "")).lower()
         sample_date = row.get("Sample Date", "")
         year = ""
         if pd.notna(sample_date):
@@ -133,9 +136,16 @@ if search_query:
                 year = pd.to_datetime(sample_date).year
             except Exception:
                 pass
-        return (query in can_id) or (query in location) or (query == str(year))
+        return (
+            (query in can_id)
+            or (query in location)
+            or (query == str(year))
+            or (query in size)
+            or (query in notes)
+            or (query in entry_type)
+        )
 
-    result = consolidated_df[consolidated_df.apply(match_row, axis=1)]
+    result = df_all[df_all.apply(match_row, axis=1)]
 
     if not result.empty:
         st.sidebar.success(f"Found {len(result)} match{'es' if len(result) > 1 else ''}")
