@@ -113,33 +113,43 @@ shelved_df = shelved_df_raw
 
 # 🔹 Add this block here
 if st.button("Average pressure of Archive samples"):
-    archive_samples = df[df["Type of Entry"].str.lower() == "archive"].copy()
+    archive_df = df.copy()
+    archive_df["Timestamp"] = pd.to_datetime(archive_df["Timestamp"], errors="coerce")
+    archive_df = archive_df.dropna(subset=["Timestamp"])
 
-    # Only keep valid timestamps
-    archive_samples["Timestamp"] = pd.to_datetime(archive_samples["Timestamp"], errors="coerce")
-    archive_samples = archive_samples.dropna(subset=["Timestamp"])
+    # Filter just Archive canisters
+    archive_df = archive_df[archive_df["Notes"].str.contains("archive", case=False, na=False)]
 
-    # Most recent 'update existing' for each canister
-    latest_updates = (
-        archive_samples[archive_samples["Type of Entry"].str.lower() == "update existing"]
-        .sort_values("Timestamp")
-        .groupby("Canister ID")
-        .tail(1)
-    )
+    pressures = []
 
-    # Try converting pressure to numeric, if not already
-    latest_updates["Pressure (psig)"] = pd.to_numeric(latest_updates["Pressure (psig)"], errors="coerce")
-    valid_pressures = latest_updates["Pressure (psig)"].dropna()
+    for can_id, group in archive_df.groupby("Canister ID"):
+        group = group.sort_values("Timestamp")
 
-    if not valid_pressures.empty:
-        avg_pressure = valid_pressures.mean()
-        st.success(f"Average pressure of Archive samples (latest updates): {avg_pressure:.2f}")
+        base = group[group["Type of Entry"].str.lower() != "update existing"]
+        if base.empty:
+            continue
+        base_row = base.iloc[-1]
+        pressure = base_row.get("Pressure (psig)", None)
+
+        updates = group[group["Type of Entry"].str.lower() == "update existing"]
+        if not updates.empty:
+            latest_update = updates.iloc[-1]
+            updated_pressure = latest_update.get("Pressure (psig)", None)
+            if pd.notna(updated_pressure) and str(updated_pressure).strip():
+                pressure = updated_pressure
+
+        try:
+            pressure_val = float(pressure)
+            pressures.append(pressure_val)
+        except (ValueError, TypeError):
+            continue  # skip if can't convert
+
+    if pressures:
+        avg = sum(pressures) / len(pressures)
+        st.success(f"Average pressure of Archive samples (using latest updates if present): {avg:.2f} psig")
     else:
-        st.warning("No valid pressures found in recent 'Update Existing' entries for Archive samples.")
-
-# 🔹 Then continue with the rest of your app
-st.title("Canister Shelf Map")
-
+        st.warning("No valid pressures found among Archive samples.")
+        
 st.title("Canister Shelf Map")
 
 rooms = sorted(shelved_df["Room"].dropna().unique())
