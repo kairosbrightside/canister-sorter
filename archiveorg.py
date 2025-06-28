@@ -113,7 +113,7 @@ shelved_df = shelved_df_raw
 
 # 🔹 Add this block here
 if st.button("Average pressure of Archive samples"):
-    archive_samples = df[df["Sample Type"].str.lower() == "archive"].copy()
+    archive_samples = df[df["Type of Entry"].str.lower() == "archive"].copy()
 
     # Only keep valid timestamps
     archive_samples["Timestamp"] = pd.to_datetime(archive_samples["Timestamp"], errors="coerce")
