@@ -159,14 +159,10 @@ if not result.empty:
             # maybe will try to implement later...
             
             #all_cols = DISPLAY_ORDER.copy()
-            all_cols = df_all
-            for col in row.index:
-                if col not in all_cols:
-                    all_cols.append(col)
 
-            # Input fields in order
-            for col in all_cols:
-                val = row[col] if col in row and pd.notna(row[col]) else ""
+            # Input fields in the order they appear in the row
+            for col in row.index:
+                val = row[col] if pd.notna(row[col]) else ""
                 updated_val = st.text_input(f"{col}", value=str(val), key=f"{col}_{i}")
                 updated_row[col] = updated_val
 
